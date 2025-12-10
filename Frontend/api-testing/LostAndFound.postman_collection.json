@@ -1,0 +1,401 @@
+{
+  "info": {
+    "name": "Lost & Found API",
+    "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+    "description": "Collection for auth and item endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Signup Student",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"student\",\n  \"fullName\": \"Alice Smith\",\n  \"email\": \"alice.smith@example.com\",\n  \"contactNumber\": \"9876543210\",\n  \"enrollmentNumber\": \"ENR20001\",\n  \"semester\": 4,\n  \"year\": 2,\n  \"department\": \"ECE\",\n  \"password\": \"Password@123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/signup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "signup"]
+        }
+      }
+    },
+    {
+      "name": "Signup Staff",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"staff\",\n  \"fullName\": \"Bob Johnson\",\n  \"email\": \"bob.johnson@example.com\",\n  \"contactNumber\": \"9123456780\",\n  \"staffId\": \"STF20001\",\n  \"department\": \"CSE\",\n  \"password\": \"Password@123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/signup",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "signup"]
+        }
+      }
+    },
+    {
+      "name": "Signin Student/Staff",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"student\",\n  \"email\": \"alice.smith@example.com\",\n  \"password\": \"Password@123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/signin",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "signin"]
+        }
+      }
+    },
+    {
+      "name": "Signin Admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"admin\",\n  \"password\": \"Admin@1234\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/signin",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "signin"]
+        }
+      }
+    },
+    {
+      "name": "Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"alice.smith@example.com\" }"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/forgot-password",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "forgot-password"]
+        }
+      }
+    },
+    {
+      "name": "Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"password\": \"NewPassword@123\" }"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/reset-password/:token",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "auth", "reset-password", ":token"]
+        }
+      }
+    },
+    {
+      "name": "Report Lost Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer <JWT_TOKEN>" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemName\": \"Black Wallet\",\n  \"itemDescription\": \"Leather wallet with cards and cash\",\n  \"dateLost\": \"2025-09-13\",\n  \"timeRange\": \"10:00 AM - 12:00 PM\",\n  \"location\": \"Library\",\n  \"itemCategory\": \"Accessories\",\n  \"identificationMark\": \"Small scratch on corner\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/lost-items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "lost-items"]
+        }
+      }
+    },
+    {
+      "name": "Report Found Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer <JWT_TOKEN>" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemName\": \"Black Wallet\",\n  \"itemDescription\": \"Leather wallet with some cash\",\n  \"placeFound\": \"Library Hall\",\n  \"timeFound\": \"2:00 PM\",\n  \"dateFound\": \"2025-09-13\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/found-items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "found-items"]
+        }
+      }
+    },
+    {
+      "name": "GET Lost Items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <JWT_TOKEN>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/lost-items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "lost-items"]
+        }
+      }
+    },
+    {
+      "name": "GET Found Items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <JWT_TOKEN>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/found-items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "found-items"]
+        }
+      }
+    },
+    {
+      "name": "Total Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <ADMIN_JWT>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/users/total",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "users", "total"]
+        }
+      }
+    },
+    {
+      "name": "User Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <ADMIN_JWT>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/users/stats",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "users", "stats"]
+        }
+      }
+    },
+    {
+      "name": "My Lost Items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <JWT_TOKEN>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/items/my-lost-items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "items", "my-lost-items"]
+        }
+      }
+    },
+    {
+      "name": "My Found Items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <JWT_TOKEN>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/items/my-found-items",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "items", "my-found-items"]
+        }
+      }
+    },
+    {
+      "name": "Get All Student Details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <ADMIN_JWT>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/student-details",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "admin", "student-details"]
+        }
+      }
+    },
+    {
+      "name": "Get All Staff Details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <ADMIN_JWT>",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/admin/staff-details",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["api", "admin", "staff-details"]
+        }
+      }
+    },
+    {
+      "name": "Match Lost & Found Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"lostItemId\": \"{{lostItemId}}\",\n    \"foundItemId\": \"{{foundItemId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/match",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "match"]
+        }
+      }
+    },
+    {
+      "name": "Claim Matched Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/match/{{matchId}}/claim",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "match", "{{matchId}}", "claim"]
+        }
+      }
+    },
+    {
+      "name": "Reject Matched Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{userToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/match/{{matchId}}/reject",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "match", "{{matchId}}", "reject"]
+        }
+      }
+    }
+  ]
+}

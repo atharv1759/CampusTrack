@@ -1,0 +1,25 @@
+/* Sleek Neon Orange Scrollbar - Webkit Browsers */
+html::-webkit-scrollbar {
+  width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+  background: #111; /* Dark track */
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: #ff6700; /* Neon orange */
+  border-radius: 9999px;
+  box-shadow: 0 0 8px #ff6700; /* Neon glow */
+}
+
+/* Hover doesn't change color */
+html::-webkit-scrollbar-thumb:hover {
+  box-shadow: 0 0 12px #ff6700; /* Slightly stronger glow on hover */
+}
+
+/* Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #ff6700 #111; /* thumb color, track color */
+}
