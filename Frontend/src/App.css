@@ -8,9 +8,9 @@ html::-webkit-scrollbar-track {
 }
 
 html::-webkit-scrollbar-thumb {
-  background-color: #ff6700; /* Neon orange */
+  background-color: #f2dcce; /* Neon orange */
   border-radius: 9999px;
-  box-shadow: 0 0 8px #ff6700; /* Neon glow */
+  box-shadow: 0 0 8px #efc2a4; /* Neon glow */
 }
 
 /* Hover doesn't change color */
