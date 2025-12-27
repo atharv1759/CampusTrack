@@ -52,6 +52,8 @@ public class LostItemController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("message", "Lost item reported successfully", "lostItem", lostItem));
         } catch (Exception e) {
+            e.printStackTrace(); // Print full stack trace to console
+            System.err.println("ERROR in reportLostItem: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Failed to report lost item", "error", e.getMessage()));
         }
