@@ -1,0 +1,17 @@
+# Ignore build artifacts
+target/
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.iml
+
+# Ignore environment files
+.env
+
+# Ignore logs
+*.log
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
