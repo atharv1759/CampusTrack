@@ -76,7 +76,7 @@ function ContactPage() {
             <div className="space-y-3 text-gray-300 text-sm sm:text-base">
               <p>
                 <span className="text-orange-500 font-semibold">Email:</span>{" "}
-                care@campustrack.com
+                manishraj5411@gmail.com
               </p>
               <p>
                 <span className="text-orange-500 font-semibold">Address:</span>{" "}
