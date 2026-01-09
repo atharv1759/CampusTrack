@@ -1,4 +1,4 @@
-import API_BASE_URL from "../config";
+import { API_BASE_URL } from "../config";
 
 export async function signin(data) {
   const response = await fetch(`${API_BASE_URL}/auth/signin`, {

@@ -19,7 +19,13 @@ function AdminDashboard() {
       <Sidebar />
 
       {/* Right content */}
-      <div className="flex-1 bg-black min-h-screen md:ml-64">
+      <div className="flex-1 relative min-h-screen md:ml-64">
+        {/* Background */}
+        <div className="fixed inset-0 bg-gradient-to-b from-slate-900 via-gray-900 to-black -z-10"></div>
+        <div className="fixed inset-0 opacity-20 -z-10">
+          <div className="absolute top-0 left-0 right-0 h-80 bg-gradient-to-b from-orange-500/15 to-transparent"></div>
+        </div>
+        
         <Routes>
           <Route path="/" element={<TopSection />} />
           <Route path="lost-items" element={<LostItemsPage />} />

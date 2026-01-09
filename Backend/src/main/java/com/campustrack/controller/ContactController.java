@@ -4,7 +4,10 @@ import com.campustrack.dto.ContactRequest;
 import com.campustrack.model.Contact;
 import com.campustrack.repository.ContactRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +20,13 @@ public class ContactController {
     @Autowired
     private ContactRepository contactRepository;
     
-    // Process contact form submissions and save to database
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+    
+    @Value("${spring.mail.username}")
+    private String emailUsername;
+    
+    // Process contact form submissions and send email
     @PostMapping
     public ResponseEntity<?> submitContact(@RequestBody ContactRequest request) {
         try {
@@ -28,16 +37,42 @@ public class ContactController {
                         .body(Map.of("message", "All fields are required"));
             }
             
-            // Create and save contact
+            // Send email to support team
+            if (mailSender != null) {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(emailUsername);
+                message.setTo(emailUsername); // Send to your support email
+                message.setReplyTo(request.getEmail()); // User can reply directly to sender
+                message.setSubject("New Contact Form Submission - Campus Track");
+                message.setText(String.format("""
+                    Message:
+                    %s
+                    
+                    From: %s
+                    Email: %s
+                    Phone: %s
+                    ---
+                    This message was sent via the Campus Track contact form.
+                    Reply to this email to respond directly to the user.
+                    """,
+                    request.getMessage(),
+                    request.getName(),
+                    request.getEmail(),
+                    request.getPhone()
+                ));
+                
+                mailSender.send(message);
+            }
+            
+            // Optional: Still save to database as backup/history
             Contact contact = new Contact();
             contact.setName(request.getName());
             contact.setEmail(request.getEmail());
             contact.setPhone(request.getPhone());
             contact.setMessage(request.getMessage());
-            
             contactRepository.save(contact);
             
-            return ResponseEntity.ok(Map.of("message", "Message sent successfully!"));
+            return ResponseEntity.ok(Map.of("message", "Message sent successfully! We'll get back to you soon."));
         } catch (Exception e) {
             return ResponseEntity.status(500)
                     .body(Map.of("message", "Failed to send message", "error", e.getMessage()));

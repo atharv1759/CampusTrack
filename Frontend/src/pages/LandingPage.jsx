@@ -4,7 +4,7 @@ import Footer from '../components/common/Footer'
 import { Hero } from '../components/landing-page/Hero'
 import { Features } from '../components/landing-page/Features'
 import FAQ from '../components/landing-page/FAQ'
-import ChatWidget from '../components/common/ChatBot/ChatWidget'
+import AISupportButton from '../components/common/ChatBot/AISupportButton'
 
 function LandingPage() {
   return (
@@ -14,7 +14,7 @@ function LandingPage() {
     <Features />
     <FAQ />
     <Footer />
-    <ChatWidget />
+    <AISupportButton />
     </>
   )
 }

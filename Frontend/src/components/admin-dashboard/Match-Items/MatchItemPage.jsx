@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaBell, FaUser, FaBox, FaCheckCircle } from "react-icons/fa";
-import API_BASE_URL from "../../../config";
+import { API_BASE_URL } from "../../../config";
 import SearchBar from "../../common/SearchBar";
 import Loader from "./AILoader";
 import toast from "react-hot-toast";
@@ -119,7 +119,15 @@ const MatchItemPage = () => {
     );
 
   return (
-    <div className="min-h-screen bg-black p-6">
+    <div className="relative min-h-screen">
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-900 via-gray-900 to-black -z-10"></div>
+      <div className="fixed inset-0 opacity-30 -z-10">
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-purple-500/20 to-transparent"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 p-6">
       <div className="flex justify-center mb-6">
         <div className="w-full sm:w-3/4 md:w-1/2 lg:w-1/2">
           <SearchBar
@@ -205,6 +213,7 @@ const MatchItemPage = () => {
             </button>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ import {
   FaSearch,
   FaChevronDown,
 } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "/logo.png";
 import { MdDashboard } from "react-icons/md";
 import { GiPuzzle } from "react-icons/gi";
@@ -18,6 +18,7 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [usersDropdownOpen, setUsersDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const toggleSidebar = () => setIsOpen(!isOpen);
   const toggleUsersDropdown = () => setUsersDropdownOpen(!usersDropdownOpen);
@@ -81,7 +82,11 @@ const Sidebar = () => {
             <div key={item.name}>
               <button
                 onClick={() => handleClick(item)}
-                className="cursor-pointer w-full flex items-center justify-between gap-3 p-2 rounded-md hover:text-orange-400 text-gray-200 font-medium transition-colors"
+                className={`cursor-pointer w-full flex items-center justify-between gap-3 p-2 rounded-md font-medium transition-colors ${
+                  item.path && location.pathname === item.path
+                    ? 'bg-orange-500/20 text-orange-400 border-l-4 border-orange-400'
+                    : 'text-gray-200 hover:text-orange-400 hover:bg-gray-800'
+                }`}
               >
                 <span className="flex items-center gap-3">
                   {item.icon}
@@ -102,7 +107,11 @@ const Sidebar = () => {
                   {item.dropdown.map((subItem) => (
                     <button
                       key={subItem}
-                      className="text-gray-400 hover:text-orange-400 p-1 text-md font-semibold cursor-pointer rounded-md text-left"
+                      className={`p-1 text-md font-semibold cursor-pointer rounded-md text-left transition-colors ${
+                        location.pathname === `/admin-dashboard/${subItem.toLowerCase()}`
+                          ? 'text-orange-400 bg-orange-500/10'
+                          : 'text-gray-400 hover:text-orange-400'
+                      }`}
                       onClick={() => {
                         navigate(`/admin-dashboard/${subItem.toLowerCase()}`);
                         setIsOpen(false);

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API_BASE_URL from "../../../config";
+import axios from "axios";
+import { API_BASE_URL } from "../../../config";
 import { FaUserTie, FaEnvelope, FaPhoneAlt } from "react-icons/fa";
 import { MdArrowForward } from "react-icons/md";
 import Loader from "../../common/Loader/Loader";
@@ -10,6 +11,8 @@ import noperson from "../../../assets/admin-dashboard/noperson.png";
 
 const StaffPage = () => {
   const [staff, setStaff] = useState([]);
+  const [lostItems, setLostItems] = useState([]);
+  const [foundItems, setFoundItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,41 +20,57 @@ const StaffPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchStaff = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
-
-        const res = await fetch(`${API_BASE_URL}/admin/staff-details`, {
+        const config = {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        });
+        };
 
-        if (res.status === 401) {
+        // Fetch staff and items in parallel
+        const [staffRes, lostRes, foundRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/admin/staff-details`, config),
+          axios.get(`${API_BASE_URL}/lost-items`, { headers: config.headers }),
+          axios.get(`${API_BASE_URL}/found-items`, { headers: config.headers })
+        ]);
+
+        if (staffRes.status === 401) {
           setError("Unauthorized access. Please login as admin.");
           setLoading(false);
           return;
         }
 
-        const data = await res.json();
+        const staffData = await staffRes.json();
 
-        if (Array.isArray(data.staff)) {
-          setStaff(data.staff);
+        if (Array.isArray(staffData.staff)) {
+          setStaff(staffData.staff);
         } else {
           setStaff([]);
           setError("No staff data found");
         }
+
+        setLostItems(lostRes.data.items || []);
+        setFoundItems(foundRes.data.items || []);
       } catch (err) {
-        console.error("Error fetching staff:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to load staff data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStaff();
+    fetchData();
   }, []);
+
+  // Count items for each staff member
+  const getItemCounts = (staffEmail) => {
+    const lostCount = lostItems.filter(item => item.userEmail === staffEmail).length;
+    const foundCount = foundItems.filter(item => item.userEmail === staffEmail).length;
+    return { lostCount, foundCount };
+  };
 
   const filteredStaff = staff.filter(
     (member) =>
@@ -67,7 +86,15 @@ const StaffPage = () => {
     );
 
   return (
-    <div className="p-8 bg-black min-h-screen text-white">
+    <div className="relative min-h-screen text-white">
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-900 via-gray-900 to-black"></div>
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-orange-500/20 to-transparent"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 p-8">
       {/* Search Bar */}
       <div className="flex justify-center mt-20 lg:mt-4 md:mt-4">
         <SearchBar
@@ -87,7 +114,9 @@ const StaffPage = () => {
             </p>
           </div>
         ) : (
-          filteredStaff.map((member) => (
+          filteredStaff.map((member) => {
+            const { lostCount, foundCount } = getItemCounts(member.email);
+            return (
             <div
               key={member._id}
               className="relative bg-zinc-900 shadow-md rounded-xl border border-gray-700 p-5 hover:shadow-lg transition-all duration-200"
@@ -95,7 +124,7 @@ const StaffPage = () => {
               {/* Desktop View Profile Button */}
               <button
                 onClick={() =>
-                  navigate(`/admin-dashboard/staff-profile/${member._id}`)
+                  navigate(`/admin-dashboard/staff-profile/${member.id || member._id}`)
                 }
                 className="
                   cursor-pointer absolute top-4 right-4 
@@ -111,7 +140,7 @@ const StaffPage = () => {
               {/* Mobile Arrow */}
               <button
                 onClick={() =>
-                  navigate(`/admin-dashboard/staff-profile/${member._id}`)
+                  navigate(`/admin-dashboard/staff-profile/${member.id || member._id}`)
                 }
                 className="
                   cursor-pointer absolute top-4 right-4 
@@ -164,25 +193,37 @@ const StaffPage = () => {
               <div className="flex flex-wrap gap-3 mt-4">
                 <button
                   onClick={() =>
-                    navigate(`/admin-dashboard/staff-profile/${member._id}`)
+                    navigate(`/admin-dashboard/staff-profile/${member.id || member._id}`, { state: { activeTab: 'lost' } })
                   }
-                  className="cursor-pointer px-4 py-2 text-sm rounded-lg text-white bg-red-500 hover:bg-red-600 transition"
+                  className="cursor-pointer px-4 py-2 text-sm rounded-lg text-white bg-red-500 hover:bg-red-600 transition flex items-center gap-2"
                 >
                   Lost Items
+                  {lostCount > 0 && (
+                    <span className="bg-white text-red-500 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {lostCount}
+                    </span>
+                  )}
                 </button>
 
                 <button
                   onClick={() =>
-                    navigate(`/admin-dashboard/staff-profile/${member._id}`)
+                    navigate(`/admin-dashboard/staff-profile/${member.id || member._id}`, { state: { activeTab: 'found' } })
                   }
-                  className="cursor-pointer px-4 py-2 text-sm rounded-lg text-white bg-green-500 hover:bg-green-600 transition"
+                  className="cursor-pointer px-4 py-2 text-sm rounded-lg text-white bg-green-500 hover:bg-green-600 transition flex items-center gap-2"
                 >
                   Found Items
+                  {foundCount > 0 && (
+                    <span className="bg-white text-green-500 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {foundCount}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
+      </div>
       </div>
     </div>
   );

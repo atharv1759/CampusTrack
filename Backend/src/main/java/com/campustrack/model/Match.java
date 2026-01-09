@@ -18,6 +18,8 @@ public class Match {
     private String lostItemId;
     private String foundItemId;
     private String status = "pending"; // Can be: pending, claimed, or rejected
+    private Integer confidenceScore; // Match confidence percentage (0-100)
+    private String handoverStatus = "pending"; // pending, submitted_by_finder, received_by_owner
     
     @CreatedDate
     private Instant createdAt;

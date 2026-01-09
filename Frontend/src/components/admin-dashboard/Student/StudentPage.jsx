@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import API_BASE_URL from "../../../config";
+import { API_BASE_URL } from "../../../config";
 import { FaEnvelope, FaPhoneAlt, FaUniversity } from "react-icons/fa";
 import { MdArrowForward } from "react-icons/md";
+import axios from "axios";
 import noperson from "../../../assets/admin-dashboard/noperson.png";
 import Loader from "../../common/Loader/Loader";
 import SearchBar from "../../common/SearchBar";
@@ -9,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 const StudentPage = () => {
   const [students, setStudents] = useState([]);
+  const [studentItemCounts, setStudentItemCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,25 +20,50 @@ const StudentPage = () => {
     const fetchStudents = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/admin/students-details`, {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+
+        // Fetch students
+        const studentsRes = await fetch(`${API_BASE_URL}/admin/students-details`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
 
-        if (res.status === 401) {
+        if (studentsRes.status === 401) {
           setError("Unauthorized access. Please login as admin.");
           setLoading(false);
           return;
         }
 
-        const data = await res.json();
-        if (Array.isArray(data.students)) setStudents(data.students);
-        else {
+        const studentsData = await studentsRes.json();
+        if (!Array.isArray(studentsData.students)) {
           setStudents([]);
           setError("No student data found");
+          setLoading(false);
+          return;
         }
+
+        setStudents(studentsData.students);
+
+        // Fetch lost and found items for counting
+        const [lostRes, foundRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/lost-items`, config),
+          axios.get(`${API_BASE_URL}/found-items`, config)
+        ]);
+
+        const lostItems = lostRes.data.items || [];
+        const foundItems = foundRes.data.items || [];
+
+        // Count items per student by email
+        const counts = {};
+        studentsData.students.forEach(student => {
+          const lostCount = lostItems.filter(item => item.userEmail === student.email).length;
+          const foundCount = foundItems.filter(item => item.userEmail === student.email).length;
+          counts[student.id] = { lost: lostCount, found: foundCount };
+        });
+
+        setStudentItemCounts(counts);
       } catch (err) {
         console.error("Error fetching students:", err);
         setError("Failed to load student data");
@@ -65,7 +92,15 @@ const StudentPage = () => {
     );
 
   return (
-    <div className="p-8 bg-black min-h-screen">
+    <div className="relative min-h-screen">
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-900 via-gray-900 to-black"></div>
+      <div className="fixed inset-0 opacity-30">
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-orange-500/20 to-transparent"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 p-8">
       <div className="flex justify-center mt-20 lg:mt-4 md:mt-4">
         <SearchBar
           searchTerm={searchTerm}
@@ -85,12 +120,12 @@ const StudentPage = () => {
         ) : (
           filteredStudents.map((student) => (
             <div
-              key={student._id}
+              key={student.id}
               className="relative bg-zinc-900 shadow-md rounded-xl border border-gray-700 p-5 hover:shadow-lg transition-all duration-200"
             >
               <button
                 onClick={() =>
-                  navigate(`/admin-dashboard/student-profile/${student._id}`)
+                  navigate(`/admin-dashboard/student-profile/${student.id}`)
                 }
                 className="absolute top-4 right-4 px-3 py-1.5 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-md shadow-sm transition hidden sm:block"
               >
@@ -99,7 +134,7 @@ const StudentPage = () => {
 
               <button
                 onClick={() =>
-                  navigate(`/admin-dashboard/student-profile/${student._id}`)
+                  navigate(`/admin-dashboard/student-profile/${student.id}`)
                 }
                 className="absolute top-4 right-4 text-orange-500 sm:hidden text-2xl"
               >
@@ -136,25 +171,40 @@ const StudentPage = () => {
               <div className="flex flex-wrap gap-3 mt-4">
                 <button
                   onClick={() =>
-                    navigate(`/admin-dashboard/student-profile/${student._id}`)
+                    navigate(`/admin-dashboard/student-profile/${student.id}`, {
+                      state: { activeTab: 'lost' }
+                    })
                   }
-                  className="px-4 py-2 text-sm rounded-lg text-white bg-red-500 hover:bg-red-600 transition"
+                  className="px-4 py-2 text-sm rounded-lg text-white bg-red-500 hover:bg-red-600 transition font-medium flex items-center gap-2"
                 >
                   Lost Items
+                  {studentItemCounts[student.id]?.lost > 0 && (
+                    <span className="bg-red-700 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      {studentItemCounts[student.id].lost}
+                    </span>
+                  )}
                 </button>
 
                 <button
                   onClick={() =>
-                    navigate(`/admin-dashboard/student-profile/${student._id}`)
+                    navigate(`/admin-dashboard/student-profile/${student.id}`, {
+                      state: { activeTab: 'found' }
+                    })
                   }
-                  className="px-4 py-2 text-sm rounded-lg text-white bg-green-500 hover:bg-green-600 transition"
+                  className="px-4 py-2 text-sm rounded-lg text-white bg-green-500 hover:bg-green-600 transition font-medium flex items-center gap-2"
                 >
                   Found Items
+                  {studentItemCounts[student.id]?.found > 0 && (
+                    <span className="bg-green-700 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      {studentItemCounts[student.id].found}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );
