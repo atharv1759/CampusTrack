@@ -3,7 +3,7 @@ import { FaUser, FaEnvelope, FaPhoneAlt, FaCommentDots } from "react-icons/fa";
 import axios from "axios";
 import Navbar from "../components/common/Navbar";
 import Footer from "../components/common/Footer";
-import API_BASE_URL from "../config";
+import { API_BASE_URL } from "../config";
 import toast from "react-hot-toast";
 
 function ContactPage() {
@@ -76,11 +76,11 @@ function ContactPage() {
             <div className="space-y-3 text-gray-300 text-sm sm:text-base">
               <p>
                 <span className="text-orange-500 font-semibold">Email:</span>{" "}
-                support@campustrack.com
+                manishraj5411@gmail.com
               </p>
               <p>
                 <span className="text-orange-500 font-semibold">Address:</span>{" "}
-                New Delhi, India
+                Bengaluru, India
               </p>
             </div>
           </div>

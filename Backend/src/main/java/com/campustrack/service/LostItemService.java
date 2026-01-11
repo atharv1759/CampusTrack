@@ -23,6 +23,9 @@ public class LostItemService {
     @Autowired
     private Cloudinary cloudinary;
     
+    @Autowired
+    private AutoMatchService autoMatchService;
+    
     // Process new lost item report from user with optional image
     public LostItem reportLostItem(LostItemRequest request, MultipartFile imageFile, User user) throws IOException {
         LostItem lostItem = new LostItem();
@@ -44,7 +47,16 @@ public class LostItemService {
             lostItem.setItemImage((String) uploadResult.get("url"));
         }
         
-        return lostItemRepository.save(lostItem);
+        LostItem savedItem = lostItemRepository.save(lostItem);
+        
+        // Automatically check for matches with found items
+        try {
+            autoMatchService.checkMatchesForLostItem(savedItem);
+        } catch (Exception e) {
+            System.err.println("Auto-match failed: " + e.getMessage());
+        }
+        
+        return savedItem;
     }
     
     // Fetch all lost items sorted by newest first

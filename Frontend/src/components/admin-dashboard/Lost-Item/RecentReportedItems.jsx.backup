@@ -1,0 +1,273 @@
+import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import {
+  FaWallet,
+  FaMobileAlt,
+  FaKey,
+  FaBook,
+  FaIdCard,
+  FaHeadphones,
+  FaLaptop,
+  FaGlasses,
+  FaUmbrella,
+  FaBackpack,
+} from "react-icons/fa";
+import { Chart, registerables } from "chart.js";
+import { API_BASE_URL } from "../../../config";
+
+Chart.register(...registerables);
+
+const RecentReportedItems = () => {
+  const chartRef = useRef(null);
+  const chartInstance = useRef(null);
+  const [lostItems, setLostItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Category icon mapping
+  const categoryIcons = {
+    "Wallet": { icon: <FaWallet />, color: "bg-blue-800 text-blue-300" },
+    "Mobile Phone": { icon: <FaMobileAlt />, color: "bg-green-800 text-green-300" },
+    "Keys": { icon: <FaKey />, color: "bg-yellow-800 text-yellow-300" },
+    "Book": { icon: <FaBook />, color: "bg-purple-800 text-purple-300" },
+    "ID Card": { icon: <FaIdCard />, color: "bg-pink-800 text-pink-300" },
+    "Headphones": { icon: <FaHeadphones />, color: "bg-orange-800 text-orange-300" },
+    "Laptop": { icon: <FaLaptop />, color: "bg-indigo-800 text-indigo-300" },
+    "Glasses": { icon: <FaGlasses />, color: "bg-teal-800 text-teal-300" },
+    "Umbrella": { icon: <FaUmbrella />, color: "bg-cyan-800 text-cyan-300" },
+    "Backpack": { icon: <FaBackpack />, color: "bg-red-800 text-red-300" },
+    "default": { icon: <FaKey />, color: "bg-gray-800 text-gray-300" },
+  };
+
+  // Fetch lost items from backend
+  useEffect(() => {
+    const fetchLostItems = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const { data } = await axios.get(`${API_BASE_URL}/lost-items`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setLostItems(data.items || []);
+      } catch (error) {
+        console.error("Failed to fetch lost items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLostItems();
+  }, []);
+
+  // Get category frequency for the current month
+  const getCategoryFrequency = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    const categoryCounts = {};
+
+    lostItems.forEach(item => {
+      const itemDate = new Date(item.dateLost);
+      if (itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear) {
+        const category = item.itemCategory || "Other";
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      }
+    });
+
+    return categoryCounts;
+  };
+
+  // Get recently reported items (last 6 unique categories)
+  const getRecentCategories = () => {
+    const seen = new Set();
+    const recent = [];
+
+    // Sort by most recent first
+    const sortedItems = [...lostItems].sort((a, b) => 
+      new Date(b.createdAt || b.dateLost) - new Date(a.createdAt || a.dateLost)
+    );
+
+    for (const item of sortedItems) {
+      const category = item.itemCategory;
+      if (category && !seen.has(category) && recent.length < 6) {
+        seen.add(category);
+        recent.push({
+          name: category,
+          ...categoryIcons[category] || categoryIcons["default"]
+        });
+      }
+    }
+
+    // Fill remaining slots with default categories if needed
+    const defaultCategories = ["Wallet", "Mobile Phone", "Keys", "Book", "ID Card", "Headphones"];
+    while (recent.length < 6) {
+      const cat = defaultCategories[recent.length];
+      if (!seen.has(cat)) {
+        recent.push({
+          name: cat,
+          ...categoryIcons[cat]
+        });
+      } else {
+        break;
+      }
+    }
+
+    return recent;
+  };
+
+  // Initialize chart with real data
+  useEffect(() => {
+    if (loading || lostItems.length === 0) return;
+
+    if (chartInstance.current) chartInstance.current.destroy();
+
+    const ctx = chartRef.current.getContext("2d");
+
+    const categoryFrequency = getCategoryFrequency();
+    const labels = Object.keys(categoryFrequency);
+    const values = Object.values(categoryFrequency);
+
+    // If no data for current month, show message
+    if (labels.length === 0) {
+      return;
+    }
+
+    const data = {
+      labels,
+      datasets: [
+        {
+          label: "Number of Lost Items",
+          data: values,
+          backgroundColor: "#f97316", // orange accent
+          borderWidth: 0,
+          borderRadius: 6,
+          animations: { y: { duration: 1200, easing: "easeOutQuart" } },
+        },
+      ],
+    };
+
+    const config = {
+      type: "bar",
+      data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 1200,
+          easing: "easeInOutQuart",
+          delay: ctx => (ctx.type === "data" && ctx.mode === "default" ? ctx.dataIndex * 120 : 0),
+        },
+        plugins: {
+          legend: { 
+            display: true, 
+            position: "top", 
+            labels: { 
+              color: "#f4f4f5",
+              font: { size: 12, weight: 'bold' }
+            } 
+          },
+          tooltip: {
+            backgroundColor: "#1f2937",
+            titleColor: "#f4f4f5",
+            bodyColor: "#f4f4f5",
+            borderColor: "#f97316",
+            borderWidth: 1,
+            callbacks: {
+              label: function(context) {
+                return `Count: ${context.parsed.y} item${context.parsed.y !== 1 ? 's' : ''}`;
+              }
+            }
+          },
+        },
+        scales: {
+          x: { 
+            grid: { display: false }, 
+            ticks: { 
+              color: "#f4f4f5",
+              font: { size: 11 }
+            } 
+          },
+          y: { 
+            beginAtZero: true, 
+            grid: { drawBorder: false, color: "rgba(255,255,255,0.1)" }, 
+            ticks: { 
+              color: "#f4f4f5",
+              stepSize: 1,
+              font: { size: 11 }
+            },
+            title: {
+              display: true,
+              text: 'Number of Items Reported',
+              color: '#f4f4f5',
+              font: { size: 12, weight: 'bold' }
+            }
+          },
+        },
+      },
+    };
+
+    chartInstance.current = new Chart(ctx, config);
+  }, [lostItems, loading]);
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-6 items-stretch w-full overflow-hidden">
+
+      {/* LEFT SIDE: Recently Reported Items */}
+      <div className="bg-black rounded-2xl p-5 border border-gray-700
+                      w-full lg:w-[40%] flex-shrink min-h-[250px] sm:min-h-[300px] lg:min-h-[380px] overflow-hidden">
+        <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">
+          Recently Reported Items
+        </h2>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-48">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          </div>
+        ) : lostItems.length === 0 ? (
+          <div className="flex justify-center items-center h-48">
+            <p className="text-gray-400">No lost items reported yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4 sm:gap-6 w-full">
+            {getRecentCategories().map((item, index) => (
+              <div key={index} className="flex flex-col items-center bg-zinc-800
+                                           border border-gray-700 rounded-lg
+                                           p-3 sm:p-4 hover:shadow-md transition cursor-pointer w-full">
+                <div className={`w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center 
+                                rounded-full text-xl sm:text-2xl ${item.color}`}>
+                  {item.icon}
+                </div>
+                <p className="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-gray-200 text-center">
+                  {item.name}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* RIGHT SIDE: Chart */}
+      <div className="bg-black rounded-2xl border border-gray-700 p-5 
+                      w-full lg:w-[60%] min-w-0">
+        <h2 className="text-xl font-semibold text-white mb-4">
+          Frequent Lost Items of the Month
+        </h2>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          </div>
+        ) : lostItems.length === 0 || Object.keys(getCategoryFrequency()).length === 0 ? (
+          <div className="flex flex-col justify-center items-center h-64">
+            <p className="text-gray-400 mb-2">No lost items reported this month</p>
+            <p className="text-gray-500 text-sm">Data will appear when items are reported</p>
+          </div>
+        ) : (
+          <div className="relative w-full h-[220px] sm:h-[260px] md:h-[300px] lg:h-[360px] xl:h-[380px] overflow-hidden">
+            <canvas ref={chartRef}></canvas>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default RecentReportedItems;

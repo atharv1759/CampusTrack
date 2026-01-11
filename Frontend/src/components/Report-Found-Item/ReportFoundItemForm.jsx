@@ -3,7 +3,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from "axios";
 import toast from "react-hot-toast";
-import API_BASE_URL from "../../config";
+import { API_BASE_URL } from "../../config";
 import CategoryDropdown from "./CategoryDropdown";
 
 const ReportFoundItemForm = ({ user }) => {

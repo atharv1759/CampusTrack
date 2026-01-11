@@ -1,20 +1,23 @@
 package com.campustrack.controller;
 
 import com.campustrack.model.Notification;
+import com.campustrack.model.User;
 import com.campustrack.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/notify")
+@RequestMapping("/api")
 public class NotificationController {
     
     @Autowired
@@ -26,8 +29,75 @@ public class NotificationController {
     @Value("${spring.mail.username}")
     private String emailUser;
     
-    // Handle both fetching notifications and sending email notifications
-    @PostMapping("/user")
+    // Get all notifications for current user
+    @GetMapping("/notifications")
+    public ResponseEntity<?> getNotifications(Authentication authentication) {
+        try {
+            User user = (User) authentication.getPrincipal();
+            List<Notification> notifications = notificationRepository
+                    .findByUserEmailOrderByCreatedAtDesc(user.getEmail());
+            return ResponseEntity.ok(notifications);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Failed to fetch notifications", "error", e.getMessage()));
+        }
+    }
+    
+    // Mark single notification as read
+    @PutMapping("/notifications/{id}/read")
+    public ResponseEntity<?> markAsRead(@PathVariable String id,
+                                       Authentication authentication) {
+        try {
+            User user = (User) authentication.getPrincipal();
+            Optional<Notification> notificationOpt = notificationRepository.findById(id);
+            
+            if (!notificationOpt.isPresent()) {
+                return ResponseEntity.status(404)
+                        .body(Map.of("message", "Notification not found"));
+            }
+            
+            Notification notification = notificationOpt.get();
+            
+            // Verify user owns this notification
+            if (!notification.getUserEmail().equals(user.getEmail())) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "Unauthorized"));
+            }
+            
+            notification.setIsRead(true);
+            notificationRepository.save(notification);
+            
+            return ResponseEntity.ok(Map.of("message", "Notification marked as read"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Failed to mark as read", "error", e.getMessage()));
+        }
+    }
+    
+    // Mark all notifications as read
+    @PutMapping("/notifications/read-all")
+    public ResponseEntity<?> markAllAsRead(Authentication authentication) {
+        try {
+            User user = (User) authentication.getPrincipal();
+            List<Notification> notifications = notificationRepository
+                    .findByUserEmailOrderByCreatedAtDesc(user.getEmail());
+            
+            for (Notification notification : notifications) {
+                if (!notification.getIsRead()) {
+                    notification.setIsRead(true);
+                    notificationRepository.save(notification);
+                }
+            }
+            
+            return ResponseEntity.ok(Map.of("message", "All notifications marked as read"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Failed to mark all as read", "error", e.getMessage()));
+        }
+    }
+    
+    // Legacy endpoint for email notifications (kept for backward compatibility)
+    @PostMapping("/notify/user")
     public ResponseEntity<?> handleNotification(@RequestBody Map<String, Object> request) {
         try {
             // If request has email but no 'to' field, user wants to fetch their notifications

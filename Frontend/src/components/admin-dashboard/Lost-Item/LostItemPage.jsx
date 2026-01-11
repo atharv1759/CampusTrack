@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTrash } from "react-icons/fa";
 import toast, { Toaster } from "react-hot-toast";
-import API_BASE_URL from "../../../config";
+import { API_BASE_URL } from "../../../config";
 import noitems from "./../../../assets/admin-dashboard/noitems.png";
 import Loader from "../../common/Loader/Loader";
 import LostItemModal from "./LostItemModal";
@@ -79,7 +79,15 @@ const LostItemsPage = () => {
   if (error) return <p className="p-4 text-red-500">{error}</p>;
 
   return (
-    <div className="p-4 min-h-screen bg-black text-gray-200">
+    <div className="relative min-h-screen text-gray-200">
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-b from-slate-900 via-gray-900 to-black -z-10"></div>
+      <div className="fixed inset-0 opacity-30 -z-10">
+        <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-red-500/20 to-transparent"></div>
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10 p-4">
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="mb-6 flex justify-center mt-20 lg:mt-4 md:mt-4">
@@ -101,7 +109,7 @@ const LostItemsPage = () => {
         </div>
       ) : (
         <div className="overflow-x-auto w-full">
-          <RecentReportedItems />
+          <RecentReportedItems lostItems={lostItems} />
 
           <table className="mt-8 min-w-full divide-y divide-gray-700 bg-black shadow rounded-lg">
             <thead className="bg-zinc-700">
@@ -188,6 +196,7 @@ const LostItemsPage = () => {
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
       />
+      </div>
     </div>
   );
 };

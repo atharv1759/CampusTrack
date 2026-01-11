@@ -2,12 +2,15 @@ package com.campustrack.controller;
 
 import com.campustrack.dto.MatchRequest;
 import com.campustrack.model.User;
+import com.campustrack.model.Match;
+import com.campustrack.repository.MatchRepository;
 import com.campustrack.service.MatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 // Manages the matching process between lost and found items
@@ -17,6 +20,29 @@ public class MatchController {
     
     @Autowired
     private MatchService matchService;
+    
+    @Autowired
+    private MatchRepository matchRepository;
+    
+    // Get all matches (admin only)
+    @GetMapping("/matches")
+    public ResponseEntity<?> getAllMatches(Authentication authentication) {
+        try {
+            Object principal = authentication.getPrincipal();
+            String role = (principal instanceof User) ? ((User) principal).getRole() : "admin";
+            
+            if (!"admin".equals(role)) {
+                return ResponseEntity.status(403)
+                        .body(Map.of("message", "Access denied. Admins only."));
+            }
+            
+            List<Match> matches = matchRepository.findAll();
+            return ResponseEntity.ok(matches);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("message", "Failed to fetch matches", "error", e.getMessage()));
+        }
+    }
     
     @PostMapping("/match")
     public ResponseEntity<?> matchItems(@RequestBody MatchRequest request, 

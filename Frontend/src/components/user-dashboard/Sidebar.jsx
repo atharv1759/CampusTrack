@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaBars,
   FaTimes,
@@ -6,15 +6,42 @@ import {
   FaBoxOpen,
   FaSignOutAlt,
   FaSearch,
+  FaLink,
 } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
+import { API_BASE_URL } from "../../config";
 import logo from "/logo.png";
 import { MdDashboard } from "react-icons/md";
 import { IoNotifications } from "react-icons/io5";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    fetchUnreadCount();
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      const response = await axios.get(`${API_BASE_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const unread = response.data.filter((n) => !n.isRead).length;
+      setUnreadCount(unread);
+    } catch (error) {
+      console.error("Failed to fetch notification count:", error);
+    }
+  };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -27,8 +54,9 @@ const Sidebar = () => {
     { name: "Home", icon: <FaHome />, path: "/" },
     { name: "My Lost Items", icon: <FaBoxOpen />, path: "/user-dashboard/my-lost-items" },
     { name: "My Found Items", icon: <FaSearch />, path: "/user-dashboard/my-found-items" },
+    { name: "My Matches", icon: <FaLink />, path: "/user-dashboard/my-matches" },
     { name: "Dashboard", icon: <MdDashboard />, path: "/user-dashboard" },
-    { name: "Notification", icon: <IoNotifications />, path: "/user-dashboard/notification" },
+    { name: "Notification", icon: <IoNotifications />, path: "/user-dashboard/notification", badge: unreadCount },
     { name: "Logout", icon: <FaSignOutAlt />, action: handleLogout },
   ];
 
@@ -36,6 +64,10 @@ const Sidebar = () => {
     if (item.path) {
       navigate(item.path);
       setIsOpen(false);
+      // Refresh notification count when clicking notification
+      if (item.name === "Notification") {
+        setTimeout(fetchUnreadCount, 1000);
+      }
     } else if (item.action) {
       item.action();
       setIsOpen(false);
@@ -64,10 +96,19 @@ const Sidebar = () => {
             <button
               key={item.name}
               onClick={() => handleClick(item)}
-              className="cursor-pointer w-full flex items-center gap-3 p-2 rounded-md hover:text-orange-400 text-gray-200 font-medium transition-colors"
+              className={`cursor-pointer w-full flex items-center gap-3 p-3 rounded-lg font-medium transition-all duration-200 relative ${
+                item.path && location.pathname === item.path
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/50'
+                  : 'bg-zinc-800/50 text-gray-200 hover:bg-orange-500/20 hover:text-orange-400 border border-gray-700/50'
+              }`}
             >
               {item.icon}
               {item.name}
+              {item.badge > 0 && (
+                <span className="absolute right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>

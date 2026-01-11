@@ -26,6 +26,7 @@ public class FoundItem {
     private String userName;
     private String userEmail;
     private String image;
+    private String status = "pending"; // pending or claimed
     
     @CreatedDate
     private Instant createdAt;

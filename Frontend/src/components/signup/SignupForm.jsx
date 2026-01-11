@@ -10,7 +10,7 @@ import {
   FaGraduationCap,
   FaPhoneAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import InputField from "../signin/InputField";
 import RoleDropdown from "../signin/RoleDropdown";
 import { signup } from "../../api/auth";
@@ -216,12 +216,12 @@ function SignupForm({ role, open, setOpen, handleSelect }) {
       {/* Sign In Link */}
       <p className="text-center text-gray-300 text-sm md:text-base">
         Already have an account?{" "}
-        <a
-          href="/signin"
+        <Link
+          to="/signin"
           className="text-orange-400 font-semibold hover:underline"
         >
           Sign In
-        </a>
+        </Link>
       </p>
     </div>
   );

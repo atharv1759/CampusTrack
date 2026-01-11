@@ -6,7 +6,7 @@ import {
   FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import InputField from "./InputField";
 import RoleDropdown from "./RoleDropdown";
 import { signin } from "../../api/auth";
@@ -111,12 +111,12 @@ function SigninForm({ role, open, setOpen, handleSelect }) {
 
         {/* Forgot password */}
         <div className="flex justify-end">
-          <a
-            href="/forgot-password"
+          <Link
+            to="/forgot-password"
             className="text-orange-400 text-sm md:text-base font-medium hover:underline"
           >
             Forgot Password?
-          </a>
+          </Link>
         </div>
 
         {/* Submit button */}
@@ -142,12 +142,12 @@ function SigninForm({ role, open, setOpen, handleSelect }) {
       </div>
       <p className="text-center text-gray-300 text-sm md:text-base">
         Don’t have an account?{" "}
-        <a
-          href="/signup"
+        <Link
+          to="/signup"
           className="text-orange-400 font-semibold hover:underline"
         >
           Create Account
-        </a>
+        </Link>
       </p>
     </div>
   );

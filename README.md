@@ -389,10 +389,6 @@ This project is created for academic purposes.
 - Uses modern web technologies and industry best practices
 - Thanks to all open-source libraries and frameworks used
 
-##  Support
-
-For support, email campustrack@gmail.com or create an issue in this repository.
-
 ---
 
 ** If you find this project helpful, please give it a star!**

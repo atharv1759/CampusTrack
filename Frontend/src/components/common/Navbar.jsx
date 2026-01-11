@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaBars, FaTimes, FaUserPlus, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import Logo from "/logo.png";
@@ -10,6 +10,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -58,10 +59,15 @@ export default function Navbar() {
     { name: "Logout", icon: <FaSignOutAlt />, action: handleLogout },
   ];
 
-  // Menu link classes (neon underline on hover)
-  const neonLinkClasses =
-    "relative px-3 py-2 text-gray-200 font-medium hover:text-orange-400 transition-all duration-300 " +
-    "after:absolute after:left-0 after:-bottom-0.5 after:w-0 after:h-[2px] after:bg-orange-400 after:transition-all after:duration-300 hover:after:w-full";
+  // Menu link classes (neon underline on hover and active state)
+  const getNeonLinkClasses = (path) => {
+    const isActive = location.pathname === path;
+    return `relative px-3 py-2 font-medium transition-all duration-300 ${
+      isActive
+        ? 'text-orange-400 after:absolute after:left-0 after:-bottom-0.5 after:w-full after:h-[2px] after:bg-orange-400'
+        : 'text-gray-200 hover:text-orange-400 after:absolute after:left-0 after:-bottom-0.5 after:w-0 after:h-[2px] after:bg-orange-400 after:transition-all after:duration-300 hover:after:w-full'
+    }`;
+  };
 
   // Button classes (solid neon border, no underline)
   const neonButtonClasses =
@@ -84,7 +90,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   to={item.to}
-                  className={neonLinkClasses}
+                  className={getNeonLinkClasses(item.to)}
                   onClick={(e) => {
                     if (
                       role === "admin" &&

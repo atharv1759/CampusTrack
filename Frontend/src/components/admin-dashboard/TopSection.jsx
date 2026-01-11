@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import API_BASE_URL from "../../config";
+import { API_BASE_URL } from "../../config";
 import LostFoundChart from "./main-dashboard/LostFoundChart";
 
 const TopSection = () => {
@@ -8,6 +8,7 @@ const TopSection = () => {
   const [foundItems, setFoundItems] = useState(0);
   const [staffCount, setStaffCount] = useState(0);
   const [studentCount, setStudentCount] = useState(0);
+  const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,14 +18,72 @@ const TopSection = () => {
 
         const config = { headers: { Authorization: `Bearer ${token}` } };
 
-        const lostRes = await axios.get(`${API_BASE_URL}/lost-items`, config);
-        const foundRes = await axios.get(`${API_BASE_URL}/found-items`, config);
-        const usersRes = await axios.get(`${API_BASE_URL}/users/stats`, config);
+        const [lostRes, foundRes, usersRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/lost-items`, config),
+          axios.get(`${API_BASE_URL}/found-items`, config),
+          axios.get(`${API_BASE_URL}/users/stats`, config)
+        ]);
 
-        setLostItems(lostRes.data.items.length);
-        setFoundItems(foundRes.data.items.length);
-        setStudentCount(usersRes.data.totalStudents);
-        setStaffCount(usersRes.data.totalStaff);
+        const lostItemsData = lostRes.data.items || [];
+        const foundItemsData = foundRes.data.items || [];
+
+        setLostItems(lostItemsData.length);
+        setFoundItems(foundItemsData.length);
+        setStudentCount(usersRes.data.totalStudents || 0);
+        setStaffCount(usersRes.data.totalStaff || 0);
+
+        // Process data for chart - last 7 days
+        const processChartData = () => {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const today = new Date();
+          const last7Days = [];
+          const labels = [];
+
+          // Get last 7 days
+          for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            last7Days.push(date.toDateString());
+            labels.push(days[date.getDay()]);
+          }
+
+          // Count items per day
+          const lostCounts = new Array(7).fill(0);
+          const foundCounts = new Array(7).fill(0);
+          const returnedCounts = new Array(7).fill(0);
+          const unclaimedCounts = new Array(7).fill(0);
+
+          lostItemsData.forEach(item => {
+            const itemDate = new Date(item.dateLost || item.createdAt).toDateString();
+            const index = last7Days.indexOf(itemDate);
+            if (index !== -1) {
+              lostCounts[index]++;
+              if (item.status === 'claimed' || item.status === 'returned') {
+                returnedCounts[index]++;
+              } else if (item.status === 'unclaimed') {
+                unclaimedCounts[index]++;
+              }
+            }
+          });
+
+          foundItemsData.forEach(item => {
+            const itemDate = new Date(item.dateFound || item.createdAt).toDateString();
+            const index = last7Days.indexOf(itemDate);
+            if (index !== -1) {
+              foundCounts[index]++;
+            }
+          });
+
+          return {
+            labels,
+            lostCounts,
+            foundCounts,
+            returnedCounts,
+            unclaimedCounts
+          };
+        };
+
+        setChartData(processChartData());
       } catch (err) {
         console.error(
           "Error fetching dashboard data:",
@@ -70,7 +129,7 @@ const TopSection = () => {
         </div>
       </div>
 
-      <LostFoundChart darkMode={true} />
+      {chartData && <LostFoundChart chartData={chartData} darkMode={true} />}
     </div>
   );
 };

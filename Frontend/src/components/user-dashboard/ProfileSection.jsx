@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import API_BASE_URL from "../../config";
-import Banner from "../../assets/admin-dashboard/banner.jpg";
+import { API_BASE_URL } from "../../config";
 import Loader from "../common/Loader/Loader";
+import { FaCamera, FaTrash } from "react-icons/fa";
 
 const ProfileSection = () => {
   const [user, setUser] = useState(null);
@@ -10,6 +10,7 @@ const ProfileSection = () => {
   const [foundCount, setFoundCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [profilePic, setProfilePic] = useState(null);
 
   const getOrdinal = (num) => {
     if (!num) return "N/A";
@@ -18,7 +19,31 @@ const ProfileSection = () => {
     return num + (s[(v - 20) % 10] || s[v] || s[0]);
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePic(reader.result);
+        // Save to localStorage for persistence
+        localStorage.setItem('userProfilePic', reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setProfilePic(null);
+    localStorage.removeItem('userProfilePic');
+  };
+
   useEffect(() => {
+    // Load saved profile pic from localStorage
+    const savedPic = localStorage.getItem('userProfilePic');
+    if (savedPic) {
+      setProfilePic(savedPic);
+    }
+
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -57,92 +82,117 @@ const ProfileSection = () => {
     return <p className="text-red-500 p-4 text-center">{error}</p>;
 
   return (
-    <div className="pb-6 bg-black pt-16 lg:pt-0 md:pt-0 min-h-screen">
-      {/* Banner + Profile Header */}
-      <div className="relative w-full">
-        {/* Banner */}
-        <div
-          className="w-full h-40 sm:h-48 rounded-t-xl shadow-md bg-cover bg-center"
-          style={{ backgroundImage: `url(${Banner})` }}
-        ></div>
-
-        {/* Floating Profile Circle */}
-        <div className="absolute -bottom-12 left-4 sm:left-8 w-28 h-28 sm:w-32 sm:h-32 bg-white rounded-full shadow-lg flex items-center justify-center">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gray-50 text-orange-500 rounded-full flex items-center justify-center text-3xl sm:text-4xl font-bold">
-            {user.fullName?.charAt(0).toUpperCase()}
+    <div className="pb-6 pt-16 lg:pt-0 md:pt-0 min-h-screen px-4 sm:px-6">
+      {/* Profile Picture at Top Center */}
+      <div className="flex justify-center pt-8 pb-4">
+        <div className="relative">
+          <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full shadow-2xl flex items-center justify-center overflow-hidden border-4 border-orange-500">
+            {profilePic ? (
+              <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gray-800 flex items-center justify-center text-5xl sm:text-6xl font-bold text-orange-400">
+                {user.fullName?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
+          {/* Camera Icon for Upload */}
+          <label
+            htmlFor="profile-upload"
+            className="absolute bottom-2 right-2 bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-full cursor-pointer shadow-lg transition-all"
+          >
+            <FaCamera size={18} />
+          </label>
+          <input
+            id="profile-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          {/* Remove Icon (only show if profile pic exists) */}
+          {profilePic && (
+            <button
+              onClick={handleRemoveImage}
+              className="absolute bottom-2 left-2 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full cursor-pointer shadow-lg transition-all"
+              title="Remove profile picture"
+            >
+              <FaTrash size={16} />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Profile Info Card */}
-      <div className="bg-zinc-900 shadow-md p-6 sm:p-8 pt-16 sm:pt-20 mt-0 border border-gray-700 rounded-b-xl text-white">
-        <h1 className="text-3xl font-bold">{user.fullName}</h1>
+      {/* User Name */}
+      <h1 className="text-3xl sm:text-4xl font-bold text-center text-white mb-8">
+        {user.fullName}
+      </h1>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* LEFT COLUMN */}
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-gray-400 uppercase">Email</p>
-              <p className="text-lg font-medium truncate max-w-[260px] sm:max-w-full">
-                {user.email}
-              </p>
-            </div>
+      {/* Profile Info Cards Grid */}
+      <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Email Card */}
+        <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+          <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Email</p>
+          <p className="text-lg font-medium text-white break-words">{user.email}</p>
+        </div>
 
-            <div>
-              <p className="text-sm text-gray-400 uppercase">Role</p>
-              <p className="text-lg font-medium">{user.role}</p>
-            </div>
+        {/* Role Card */}
+        <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+          <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Role</p>
+          <p className="text-lg font-medium text-white capitalize">{user.role}</p>
+        </div>
 
-            <div>
-              <p className="text-sm text-gray-400 uppercase">Lost Items Reported</p>
-              <p className="text-lg font-medium">{lostCount}</p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-400 uppercase">Found Items Reported</p>
-              <p className="text-lg font-medium">{foundCount}</p>
-            </div>
+        {/* Department Card (if exists) */}
+        {user.department && (
+          <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+            <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Department</p>
+            <p className="text-lg font-medium text-white">{user.department}</p>
           </div>
+        )}
 
-          {/* RIGHT COLUMN */}
-          <div className="space-y-4">
-            {user.department && (
-              <div>
-                <p className="text-sm text-gray-400 uppercase">Department</p>
-                <p className="text-lg font-medium">{user.department}</p>
-              </div>
-            )}
-
-            {user.enrollmentNumber && (
-              <div>
-                <p className="text-sm text-gray-400 uppercase">Enrollment No</p>
-                <p className="text-lg font-medium">{user.enrollmentNumber}</p>
-              </div>
-            )}
-
-            {user.staffId && (
-              <div>
-                <p className="text-sm text-gray-400 uppercase">Staff ID</p>
-                <p className="text-lg font-medium">{user.staffId}</p>
-              </div>
-            )}
-
-            {user.contactNumber && (
-              <div>
-                <p className="text-sm text-gray-400 uppercase">Contact</p>
-                <p className="text-lg font-medium">{user.contactNumber}</p>
-              </div>
-            )}
-
-            {(user.semester || user.year) && (
-              <div>
-                <p className="text-sm text-gray-400 uppercase">Semester | Year</p>
-                <p className="text-lg font-medium">
-                  {getOrdinal(user.semester)} Semester &nbsp;|&nbsp; {getOrdinal(user.year)} Year
-                </p>
-              </div>
-            )}
+        {/* Enrollment Number Card (if exists) */}
+        {user.enrollmentNumber && (
+          <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+            <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Enrollment No</p>
+            <p className="text-lg font-medium text-white">{user.enrollmentNumber}</p>
           </div>
+        )}
+
+        {/* Staff ID Card (if exists) */}
+        {user.staffId && (
+          <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+            <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Staff ID</p>
+            <p className="text-lg font-medium text-white">{user.staffId}</p>
+          </div>
+        )}
+
+        {/* Contact Card (if exists) */}
+        {user.contactNumber && (
+          <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+            <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Contact</p>
+            <p className="text-lg font-medium text-white">{user.contactNumber}</p>
+          </div>
+        )}
+
+        {/* Semester/Year Card (if exists) */}
+        {(user.semester || user.year) && (
+          <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+            <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Semester | Year</p>
+            <p className="text-lg font-medium text-white">
+              {getOrdinal(user.semester)} Semester | {getOrdinal(user.year)} Year
+            </p>
+          </div>
+        )}
+
+        {/* Lost Items Card */}
+        <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+          <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Lost Items Reported</p>
+          <p className="text-3xl font-bold text-orange-400">{lostCount}</p>
+        </div>
+
+        {/* Found Items Card */}
+        <div className="bg-zinc-900 border border-gray-700 rounded-xl p-5 shadow-lg hover:shadow-orange-500/20 transition-all">
+          <p className="text-sm text-gray-400 uppercase font-semibold mb-2">Found Items Reported</p>
+          <p className="text-3xl font-bold text-orange-400">{foundCount}</p>
         </div>
       </div>
     </div>

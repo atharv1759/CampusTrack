@@ -23,6 +23,9 @@ public class FoundItemService {
     @Autowired
     private Cloudinary cloudinary;
     
+    @Autowired
+    private AutoMatchService autoMatchService;
+    
     // Handle found item submission with image upload to cloud
     public FoundItem reportFoundItem(FoundItemRequest request, MultipartFile imageFile, User user) throws IOException {
         // Upload image to Cloudinary storage
@@ -41,7 +44,16 @@ public class FoundItemService {
         foundItem.setUserEmail(user.getEmail());
         foundItem.setImage((String) uploadResult.get("url"));
         
-        return foundItemRepository.save(foundItem);
+        FoundItem savedItem = foundItemRepository.save(foundItem);
+        
+        // Automatically check for matches with lost items
+        try {
+            autoMatchService.checkMatchesForFoundItem(savedItem);
+        } catch (Exception e) {
+            System.err.println("Auto-match failed: " + e.getMessage());
+        }
+        
+        return savedItem;
     }
     
     // Retrieve all found items ordered by date

@@ -33,6 +33,9 @@ public class AuthController {
     public ResponseEntity<?> signin(@RequestBody SigninRequest request) {
         try {
             return ResponseEntity.ok(authService.signin(request));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "Signin failed", "error", e.getMessage()));

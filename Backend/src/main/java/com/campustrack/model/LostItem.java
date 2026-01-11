@@ -27,6 +27,7 @@ public class LostItem {
     private String itemCategory;
     private String identificationMark;
     private String itemImage;  // URL of uploaded image from Cloudinary
+    private String status = "pending"; // pending or claimed
     
     @CreatedDate
     private Instant createdAt;
